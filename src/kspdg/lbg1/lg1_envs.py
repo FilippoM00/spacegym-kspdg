@@ -104,6 +104,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
 
         loop_start_time = time.time()
         while True:
+            time.sleep(0.05)
 
             # get velocity and speed of bandit relative to guard
             vel_vesB_vesG__lhgntw = self.vesBandit.velocity(self.vesGuard.orbital_reference_frame)
@@ -143,6 +144,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
 
         loop_start_time = time.time()
         while True:
+            time.sleep(0.05)
 
             # get velocity and speed of bandit relative to guard
             vel_vesB_vesG__lhgntw = self.vesBandit.velocity(self.vesGuard.orbital_reference_frame)
@@ -181,6 +183,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
         self.logger.debug("Coast: Coasting toward Bandit...")
         # loop_start_time = time.time()
         while True:
+            time.sleep(0.05)
 
             # compute angle between relative velocity and relative position
             # vectors for the Bandit-Guard system
