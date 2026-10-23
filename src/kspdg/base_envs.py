@@ -415,6 +415,7 @@ class Group1BaseEnv(KSPDGBaseEnv):
         while True: 
             if self.is_episode_done or time.time() > timeout:
                 break
+            time.sleep(0.05)
 
         # zero out thrusts
         vesAgent.control.forward = 0.0
