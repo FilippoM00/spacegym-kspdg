@@ -5,10 +5,25 @@ import numpy as np
 
 from pathlib import Path
 
+try:
+    import juliacall  # noqa: F401
+
+    JULIACALL_AVAILABLE = True
+except ImportError:
+    JULIACALL_AVAILABLE = False
+
+requires_julia = pytest.mark.skipif(
+    not JULIACALL_AVAILABLE,
+    reason="juliacall (Julia runtime) is not installed in this environment",
+)
+
+
+@requires_julia
 def test_juliacall_import():
     """check if juliacall has been installed correctly"""
     from juliacall import Main as jl
 
+@requires_julia
 def test_using_ilqgames_svector():
     """check ilqgames.jl has been installed correctly, basic SVector usage"""
 
@@ -31,6 +46,7 @@ def test_using_ilqgames_svector():
         # Julia is 1-indexed, but converted to 0-index for python object x, so this should error
         x[3]
 
+@requires_julia
 def test_julia_script_and_functions():
     """check that julia scripts and functions are callable from python"""
 
