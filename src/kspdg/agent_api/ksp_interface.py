@@ -66,8 +66,11 @@ def ksp_interface_loop(
             logger.debug("receiving new agent action")
             agent_act = act_conn_recv.recv()
 
-        # if no current action provided, loop back to start to wait for agent action
+        # if no current action provided, poll on a bounded cadence instead of
+        # busy-spinning (first-action capture latency bound <=50 ms, matching
+        # the evaluation backend's bounded poll).
         if agent_act is None:
+            act_conn_recv.poll(0.05)
             continue
 
         # execute agent's action in KSP environment
