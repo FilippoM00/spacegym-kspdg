@@ -32,8 +32,19 @@ DYNAMICS_JL_PATH = KSPDG_INSTALL_PATH / DYNAMICS_JL_PATH / "dynamics.jl"
 # mean motion of 100K circular orbit around kerbing
 N_KERBIN_100K = np.round(np.sqrt(C.KERBIN.MU/((C.KERBIN.RADIUS + 1e5)**3)), 4) 
 
-from juliacall import Main as jl
+try:
+    from juliacall import Main as jl
 
+    JULIACALL_AVAILABLE = True
+except ImportError:
+    JULIACALL_AVAILABLE = False
+
+requires_julia = pytest.mark.skipif(
+    not JULIACALL_AVAILABLE,
+    reason="juliacall (Julia runtime) is not installed in this environment",
+)
+
+@requires_julia
 def test_dynamics_jl_include():
     """check include of dynamics.jl does not error"""
 
@@ -65,6 +76,7 @@ def lbg_cw_discrete_eom_rhntw_py(dt: float, n: float):
     A_jl, B_jl = jl.lbg_cw_discrete_eom__rhntw(dt, n)
     return np.array(A_jl), np.array(B_jl)
 
+@requires_julia
 def test_cw_discrete_shapes_and_real_values():
     dt = 10.0       # seconds
     n = 0.0011      # rad/s in LEO (not Kerbin)
@@ -83,6 +95,7 @@ def test_cw_discrete_shapes_and_real_values():
         (1e-6, N_KERBIN_100K)   # Kerbin 100K orbital rate
     ],
 )
+@requires_julia
 def test_cw_discrete_small_dt_approx_identity_and_dtB(dt, n):
     # For small dt, A ≈ I, B ≈ dt * Bc
     A, B = cw_discrete_rhntw_py(dt, n)
@@ -110,6 +123,7 @@ def _analytic_z_solution(t, n, z0, zdot0):
     zdot = -n * z0 * np.sin(n * t) + zdot0 * np.cos(n * t)
     return z, zdot
 
+@requires_julia
 def test_cw_z_axis_matches_analytic_sho():
     # CW equations should have z-axis motion as a decoupled simple harmonic oscillator
     # check this against an analytical model of a SHO
@@ -159,6 +173,7 @@ def _analytic_z_forced(t, n, az):
         (5.0, N_KERBIN_100K, 1.0)
     ],
 )
+@requires_julia
 def test_z_axis_forced_response_matches_analytic(dt, n, az):
     """Constant a_z input should match analytic z(t), zdot(t) after one step."""
     A, B = cw_discrete_rhntw_py(dt, n)
@@ -177,6 +192,7 @@ def test_z_axis_forced_response_matches_analytic(dt, n, az):
     assert np.allclose(z_num, z_analytic, atol=1e-8, rtol=1e-8)
     assert np.allclose(zdot_num, zdot_analytic, atol=1e-8, rtol=1e-8)
 
+@requires_julia
 def test_lbg_cw_shapes_and_real_values():
     dt = 10.0
     n = 0.0011
@@ -200,6 +216,7 @@ def test_lbg_cw_shapes_and_real_values():
         (5.0, N_KERBIN_100K)
     ],
 )
+@requires_julia
 def test_lbg_cw_block_structure_matches_single_satellite(dt, n):
     A_cw, B_cw = cw_discrete_rhntw_py(dt, n)
     A, B = lbg_cw_discrete_eom_rhntw_py(dt, n)
@@ -224,6 +241,7 @@ def test_lbg_cw_block_structure_matches_single_satellite(dt, n):
     assert np.allclose(B[0:6, 3:6], 0.0)  # bandit unaffected by guard input
     assert np.allclose(B[6:12, 0:3], 0.0)  # guard unaffected by bandit input
 
+@requires_julia
 def test_lbg_cw_bandit_guard_decoupled_dynamics():
     dt = 10.0
     n = N_KERBIN_100K
