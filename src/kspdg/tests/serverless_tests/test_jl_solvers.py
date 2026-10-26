@@ -29,8 +29,19 @@ SOLVERS_LBG1_JL_PATH = SOLVERS_LBG1_JL_PATH.partition('/')[2]
 SOLVE_LBG1_JL_PATH = KSPDG_INSTALL_PATH / SOLVERS_LBG1_JL_PATH / "solve_lbg1.jl"
 SOLVE_LQ_LBG1_JL_PATH = KSPDG_INSTALL_PATH / SOLVERS_LBG1_JL_PATH / "solve_lq_lbg1.jl"
 
-from juliacall import Main as jl
+try:
+    from juliacall import Main as jl
 
+    JULIACALL_AVAILABLE = True
+except ImportError:
+    JULIACALL_AVAILABLE = False
+
+requires_julia = pytest.mark.skipif(
+    not JULIACALL_AVAILABLE,
+    reason="juliacall (Julia runtime) is not installed in this environment",
+)
+
+@requires_julia
 def test_solve_lbg1_jl_import():
     """check import of solve_lbg1.jl does not error"""
     jl.include(str(SOLVE_LBG1_JL_PATH))
@@ -48,6 +59,7 @@ def _ensure_solvers_loaded():
     jl.include(str(SOLVE_LBG1_JL_PATH))
     jl.include(str(SOLVE_LQ_LBG1_JL_PATH))
 
+@requires_julia
 def test_accel_quad_penalty_1():
     """check acceleration penalty (i.e. soft control constraint) outputs as expected"""
 
@@ -90,6 +102,7 @@ def get_lbg1_i2_init_conds():
 def lbg1_i2_init_conds():
     return get_lbg1_i2_init_conds()
 
+@requires_julia
 def test_solve_lady_bandit_guard_costtype_3_2(lbg1_i2_init_conds):
     """run solve_lady_bandit_guard_3 (type-3 costs) solver on KSP conditions"""
 
@@ -150,6 +163,7 @@ def test_solve_lady_bandit_guard_costtype_3_2(lbg1_i2_init_conds):
         # running test for unit testing
         assert conv
 
+@requires_julia
 def test_solve_lady_bandit_guard_costtype_3_3(lbg1_i2_init_conds):
     """run solve_lady_bandit_guard_3 (type-3 costs) solver on KSP conditions"""
 
@@ -252,6 +266,7 @@ def lbg_quad_costs_2_py(**kwargs):
     rg = np.array(rg_jl)
     return Qb, qb, Rb, rb, Qg, qg, Rg, rg
 
+@requires_julia
 def test_lq_lbg_quad_costs_1_shapes_and_zero_linear_terms():
     Qb, qb, Rb, rb, Qg, qg, Rg, rg = lbg_quad_costs_1_py()
 
@@ -280,6 +295,7 @@ def test_lq_lbg_quad_costs_1_shapes_and_zero_linear_terms():
 def _stage_cost(Q, q, R, r, x, u):
     return 0.5 * x.T @ Q @ x + q.T @ x + 0.5 * u.T @ R @ u + r.T @ u
 
+@requires_julia
 def test_lq_lbg_quad_costs_1_bandit_guard_relative_position_effect():
     # Choose weights:
     #   bandit: likes being near lady (w_blady>0), dislikes guard nearby (w_bguard<0)
@@ -319,6 +335,7 @@ def test_lq_lbg_quad_costs_1_bandit_guard_relative_position_effect():
     # HIGHER cost than distance 10 when minimizing Jg.
     assert Jg2 > Jg1
 
+@requires_julia
 def test_lq_lbg_quad_costs_1_known_costs():
     # Choose weights:
     #   bandit: likes being near lady (w_blady>0), dislikes guard nearby (w_bguard<0)
@@ -385,6 +402,7 @@ def test_lq_lbg_quad_costs_1_known_costs():
     assert np.isclose(Jb, Jb_exp)
     assert np.isclose(Jg, Jg_exp)
 
+@requires_julia
 def test_lq_lbg_quad_costs_1_and_2_equality():
     """check that costs types 1 and 2 are equal when alpha_g_bl=1.0 for cost type 2"""
     Qb1, qb1, Rb1, rb1, Qg1, qg1, Rg1, rg1 = lbg_quad_costs_1_py()
@@ -402,6 +420,7 @@ def test_lq_lbg_quad_costs_1_and_2_equality():
     assert np.allclose(Rb1, Rb2)
     assert np.allclose(Rg1, Rg2)
 
+@requires_julia
 def test_lq_solve_lady_bandit_guard_costtype_1_shapes():
     """check that lq lbg solver returns strategy of appropriate shape"""
 
