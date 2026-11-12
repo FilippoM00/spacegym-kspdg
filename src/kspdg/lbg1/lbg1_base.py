@@ -474,6 +474,8 @@ class LadyBanditGuardGroup1Env(Group1BaseEnv):
                 self.is_episode_done = True
                 self.stop_bot_thread = True
                 self.stop_episode_termination_thread = True
+            else:
+                time.sleep(0.05)
 
     @classmethod
     def dpg_telem_setup(cls, history_sec: float):
