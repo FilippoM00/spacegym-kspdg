@@ -28,3 +28,41 @@ def test_short_burn_wait_clamps_sleep_below_poll_quantum():
     assert ves_agent.control.forward == 0.0
     assert ves_agent.control.right == 0.0
     assert ves_agent.control.up == 0.0
+
+
+def test_guard_bot_loops_check_breakout_before_sleeping():
+    """Triggered guard maneuver transitions must break immediately without a 50 ms lag."""
+    env = LBG1_LG1_ParentEnv(loadfile="lbg1_i1_init", reorient_time=0.0)
+    env.stop_bot_thread = False
+    env.vesGuard = SimpleNamespace(
+        orbital_reference_frame=object(),
+        control=SimpleNamespace(forward=1.0),
+        auto_pilot=SimpleNamespace(target_direction=None, error=0.0),
+    )
+
+    # 1. Zero-out breakout already met (spd < min_speed_thresh)
+    env.vesBandit = SimpleNamespace(
+        velocity=lambda _rf: (0.01, 0.0, 0.0),
+        position=lambda _rf: (100.0, 0.0, 0.0),
+    )
+    t0 = time.perf_counter()
+    env.zeroout_bandit_guard_velocity()
+    assert time.perf_counter() - t0 < 0.025
+
+    # 2. Direct burn breakout already met (spd > max_speed_thresh)
+    env.vesBandit = SimpleNamespace(
+        velocity=lambda _rf: (-15.0, 0.0, 0.0),
+        position=lambda _rf: (100.0, 0.0, 0.0),
+    )
+    t0 = time.perf_counter()
+    env.direct_burn_guard_toward_bandit()
+    assert time.perf_counter() - t0 < 0.025
+
+    # 3. Coast breakout already met (misalignment > ang_vel_pos_thresh)
+    env.vesBandit = SimpleNamespace(
+        velocity=lambda _rf: (0.0, 5.0, 0.0),
+        position=lambda _rf: (100.0, 0.0, 0.0),
+    )
+    t0 = time.perf_counter()
+    env.coast_until_pos_vel_misalign()
+    assert time.perf_counter() - t0 < 0.025

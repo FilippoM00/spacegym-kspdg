@@ -124,9 +124,11 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
             if self.vesGuard.auto_pilot.error > self.pointing_thresh:
                 self.vesGuard.control.forward = 0
                 self.logger.debug("Zeroing-Reorientation: Pointing error = {}".format(self.vesGuard.auto_pilot.error))
+                time.sleep(0.05)
                 continue
 
             self.vesGuard.control.forward = -self.pursuit_throttle
+            time.sleep(0.05)
 
         # stop burn
         self.vesGuard.control.forward = 0
@@ -170,6 +172,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
             # Point at Bandint and burn for fixed time
             self.vesGuard.auto_pilot.target_direction = pos_vesB_vesG__lhgntw
             self.vesGuard.control.forward = self.pursuit_throttle
+            time.sleep(0.05)
 
         # stop burn
         self.vesGuard.control.forward = 0
@@ -200,6 +203,7 @@ class LBG1_LG1_ParentEnv(LadyBanditGuardGroup1Env):
 
             # re-orient along velocity vector to make smoother transition to zeroing phase
             self.vesGuard.auto_pilot.target_direction = -np.array(vel_vesB_vesG__lhgntw)
+            time.sleep(0.05)
 
     # @staticmethod
     # def compute_target_pointing_angles(vesEgo, vesTarg) -> Tuple[float, float]:
